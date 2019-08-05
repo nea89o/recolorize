@@ -1,0 +1,4 @@
+rootProject.name = 'recolorize'
+include 'recolorize-lib'
+include 'recolorize-interface'
+

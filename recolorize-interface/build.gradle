@@ -1,0 +1,26 @@
+plugins {
+    id 'java'
+}
+
+group 'recolorize'
+version '1.0-SNAPSHOT'
+
+sourceCompatibility = 1.8
+
+repositories {
+    mavenCentral()
+    jcenter()
+}
+
+dependencies {
+    compile project(':recolorize-lib')
+
+    compile group: 'ch.qos.logback', name: 'logback-classic', version: logbackVersion
+    compile group: 'org.deeplearning4j', name: 'deeplearning4j-core', version: deepLearning4jVersion
+    compile group: 'org.deeplearning4j', name: 'deeplearning4j-cuda-10.0', version: deepLearning4jVersion
+    compile group: 'org.deeplearning4j', name: 'deeplearning4j-nlp', version: deepLearning4jVersion
+    compile group: 'org.deeplearning4j', name: 'deeplearning4j-zoo', version: deepLearning4jVersion
+
+    testCompile group: 'junit', name: 'junit', version: '4.12'
+}
+
