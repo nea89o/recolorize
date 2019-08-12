@@ -58,13 +58,16 @@ public class PixelImage extends Image {
         return fromBufferedImage(ImageIO.read(stream), backgroundColor);
     }
 
-
     public static PixelImage load(File file) throws IOException {
         return load(file, 0xffffff);
     }
 
     public static PixelImage load(File file, int backgroundColor) throws IOException {
         return fromBufferedImage(ImageIO.read(file), backgroundColor);
+    }
+
+    public static PixelImage fromPixelsArray(int[] arr, int width, int height) {
+        return new PixelImage(arr, width, height);
     }
 
     @Override
@@ -89,6 +92,9 @@ public class PixelImage extends Image {
         return arr[x * width + y];
     }
 
+    public int[] getPixels() {
+        return arr;
+    }
 
     @Override
     public BufferedImage asJavaImage() {
@@ -100,7 +106,6 @@ public class PixelImage extends Image {
         }
         return image;
     }
-
 
     @Override
     public File saveTo(File file) throws IOException {
