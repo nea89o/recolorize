@@ -33,7 +33,7 @@ public class Colorizer {
     private static final int EPOCHS = 5;
 
     public static void main(final String[] args) throws IOException {
-        File imagesDirectory = new File("D:\\Daten\\Documents\\Colorization\\color");
+        File imagesDirectory = new File("C:\\Users\\User\\Pictures");
 
         FileSplit images = new FileSplit(imagesDirectory, new String[]{"jpg"});
 

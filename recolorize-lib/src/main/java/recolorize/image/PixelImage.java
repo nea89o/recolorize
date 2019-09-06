@@ -18,6 +18,7 @@ public class PixelImage extends Image {
         this.arr = arr;
         this.width = width;
         this.height = height;
+        assert arr.length == width * height;
     }
 
     public static PixelImage fromJavaImage(java.awt.Image image) {
@@ -44,7 +45,7 @@ public class PixelImage extends Image {
                 if ((color & 0xff000000) == 0) {
                     color = backgroundColor;
                 }
-                buffer[i * width + j] = color;
+                buffer[i * height + j] = color;
             }
         }
         return new PixelImage(buffer, width, height);
@@ -86,10 +87,10 @@ public class PixelImage extends Image {
         if (x < 0 || x >= width) {
             throw new IllegalArgumentException("x must be in range 0-width");
         }
-        if (y < 0 || y >= width) {
+        if (y < 0 || y >= height) {
             throw new IllegalArgumentException("y must be in range 0-height");
         }
-        return arr[x * width + y];
+        return arr[x * height + y];
     }
 
     public int[] getPixels() {

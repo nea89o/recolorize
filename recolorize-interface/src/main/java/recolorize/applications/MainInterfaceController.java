@@ -5,11 +5,15 @@ import javafx.scene.image.ImageView;
 import javafx.stage.FileChooser;
 import org.deeplearning4j.nn.multilayer.MultiLayerNetwork;
 import org.deeplearning4j.util.ModelSerializer;
+import org.nd4j.linalg.api.ndarray.INDArray;
 import org.nd4j.linalg.factory.Nd4j;
 import recolorize.image.PixelImage;
 
 import java.io.File;
 import java.io.IOException;
+
+import static recolorize.applications.Colorizer.HEIGHT;
+import static recolorize.applications.Colorizer.WIDTH;
 
 public class MainInterfaceController {
 
@@ -34,9 +38,10 @@ public class MainInterfaceController {
       PixelImage greyImage = PixelImage.load(imageFile);
       greyImageView.setImage(greyImage.asJavaFxImage());
 
-      int[] greyImagePixels = model.predict(Nd4j.create(intArrayToDoubleArray(greyImage.getPixels())));
+      INDArray array = Nd4j.create(intArrayToDoubleArray(greyImage.getPixels())).reshape(1, 1, HEIGHT, WIDTH);
+      int[] colorImagePixels = model.output(array).toIntVector();
 
-      PixelImage colorImage = PixelImage.fromPixelsArray(greyImagePixels, Colorizer.WIDTH, Colorizer.HEIGHT);
+      PixelImage colorImage = PixelImage.fromPixelsArray(colorImagePixels, WIDTH, HEIGHT);
       colorImageView.setImage(colorImage.asJavaFxImage());
     }
   }
