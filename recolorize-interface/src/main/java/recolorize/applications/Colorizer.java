@@ -12,6 +12,7 @@ import org.deeplearning4j.nn.conf.layers.SubsamplingLayer;
 import org.deeplearning4j.nn.multilayer.MultiLayerNetwork;
 import org.deeplearning4j.nn.weights.WeightInit;
 import org.deeplearning4j.optimize.listeners.ScoreIterationListener;
+import org.deeplearning4j.util.ModelSerializer;
 import org.nd4j.linalg.activations.Activation;
 import org.nd4j.linalg.learning.config.Nesterovs;
 import org.nd4j.linalg.lossfunctions.LossFunctions;
@@ -24,8 +25,8 @@ import java.io.IOException;
 public class Colorizer {
     private static final Logger LOG = LoggerFactory.getLogger(Colorizer.class);
 
-    private static final int HEIGHT = 32;
-    private static final int WIDTH = 32;
+    static final int HEIGHT = 32;
+    static final int WIDTH = 32;
     private static final int CHANNELS = 1;
     private static final int BATCH_SIZE = 32;
     private static final int SEED = 123;
@@ -58,7 +59,7 @@ public class Colorizer {
 
         LOG.info("SAVE MODEL");
 
-        net.save(new File("models/net.zip"));
+        ModelSerializer.writeModel(net, "recolorize-interface/src/main/resources/model.zip", false);
     }
 
     private static MultiLayerNetwork createModel() {
