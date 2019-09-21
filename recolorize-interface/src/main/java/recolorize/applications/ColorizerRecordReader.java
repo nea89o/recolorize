@@ -39,7 +39,7 @@ public class ColorizerRecordReader extends BaseImageRecordReader {
     }
 
     private INDArray makeGreyImage(final INDArray inputArray) {
-        INDArray output = Nd4j.create(1, 1, height, width);
+        INDArray output = Nd4j.create(height, width);
 
         for (int row = 0; row < height; row++) {
             for (int col = 0; col < width; col++) {
@@ -49,7 +49,7 @@ public class ColorizerRecordReader extends BaseImageRecordReader {
 
                 double grey = makeGrey(red, green, blue);
 
-                output.putScalar(0, 0, row, col, grey);
+                output.putScalar(row, col, grey);
             }
         }
         return output;
