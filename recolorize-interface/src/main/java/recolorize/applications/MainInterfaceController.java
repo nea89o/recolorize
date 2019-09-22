@@ -11,6 +11,7 @@ import recolorize.image.PixelImage;
 import recolorize.neuralnetwork.ColorizerNeuralNetwork;
 
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Arrays;
@@ -22,22 +23,31 @@ public class MainInterfaceController {
     private final int width = 256;
     private final int height = 256;
 
+    private static final String USER_DIR = System.getProperty("user.home");
+    private static final String RECOLORIZE_DIR = USER_DIR + "/recolorize";
+    private static final String MODEL_NAME = "/model.zip";
+    private static final String IMAGES_DIR = RECOLORIZE_DIR + "/images";
+
     @FXML
     public ImageView colorImageView;
     @FXML
     public ImageView greyImageView;
 
     public MainInterfaceController() throws IOException {
-        InputStream netInputStream = getClass().getResourceAsStream("/model.zip");
+        new File(RECOLORIZE_DIR).mkdirs();
+        new File(IMAGES_DIR).mkdirs();
 
-        if (netInputStream == null) {
+        File netFile = new File(RECOLORIZE_DIR + MODEL_NAME);
+
+        if (netFile.exists()) {
+            InputStream netInputStream = new FileInputStream(new File(RECOLORIZE_DIR + MODEL_NAME));
+            model = ModelSerializer.restoreMultiLayerNetwork(netInputStream);
+        } else {
             ColorizerNeuralNetwork net = new ColorizerNeuralNetwork(width, height);
-            net.loadImages("D:\\Daten\\Documents\\Colorization\\color");
+            net.loadImages(IMAGES_DIR);
             model = net.train(5);
 
-            ModelSerializer.writeModel(model, "recolorize-interface/src/main/resources/model.zip", true);
-        } else {
-            model = ModelSerializer.restoreMultiLayerNetwork(netInputStream);
+            ModelSerializer.writeModel(model, RECOLORIZE_DIR + MODEL_NAME, true);
         }
     }
 
