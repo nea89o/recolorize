@@ -1,7 +1,7 @@
 package recolorize.image;
 
 import javax.imageio.ImageIO;
-import java.awt.Color;
+import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
@@ -112,5 +112,25 @@ public class PixelImage extends Image {
     public File saveTo(File file) throws IOException {
         ImageIO.write(asJavaImage(), "PNG", file);
         return file;
+    }
+
+    public PixelImage resize(int width, int height) {
+        BufferedImage img = asJavaImage();
+
+        BufferedImage resized = new BufferedImage(width, height, img.getType());
+
+        Graphics2D g = resized.createGraphics();
+        g.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BILINEAR);
+        g.drawImage(img, 0, 0, width, height, 0, 0, img.getWidth(), img.getHeight(), null);
+        g.dispose();
+        return fromBufferedImage(resized);
+    }
+
+    public int getWidth() {
+        return width;
+    }
+
+    public int getHeight() {
+        return height;
     }
 }

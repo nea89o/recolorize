@@ -1,4 +1,4 @@
-package recolorize.applications;
+package recolorize.neuralnetwork;
 
 import org.datavec.api.io.labels.PathLabelGenerator;
 import org.datavec.api.writable.NDArrayWritable;

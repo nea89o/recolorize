@@ -1,19 +1,17 @@
-package recolorize.applications;
+package recolorize.neuralnetwork;
 
 import org.datavec.api.split.FileSplit;
+import org.datavec.image.loader.NativeImageLoader;
 import org.deeplearning4j.datasets.datavec.RecordReaderDataSetIterator;
 import org.deeplearning4j.nn.api.OptimizationAlgorithm;
 import org.deeplearning4j.nn.conf.GradientNormalization;
 import org.deeplearning4j.nn.conf.MultiLayerConfiguration;
 import org.deeplearning4j.nn.conf.NeuralNetConfiguration;
-import org.deeplearning4j.nn.conf.distribution.GaussianDistribution;
 import org.deeplearning4j.nn.conf.distribution.NormalDistribution;
 import org.deeplearning4j.nn.conf.inputs.InputType;
 import org.deeplearning4j.nn.conf.layers.*;
 import org.deeplearning4j.nn.multilayer.MultiLayerNetwork;
 import org.deeplearning4j.nn.weights.WeightInit;
-import org.deeplearning4j.optimize.listeners.ScoreIterationListener;
-import org.deeplearning4j.util.ModelSerializer;
 import org.nd4j.linalg.activations.Activation;
 import org.nd4j.linalg.learning.config.AdaDelta;
 import org.nd4j.linalg.learning.config.Nesterovs;
@@ -24,45 +22,50 @@ import org.slf4j.LoggerFactory;
 import java.io.File;
 import java.io.IOException;
 
-public class Colorizer {
-    private static final Logger LOG = LoggerFactory.getLogger(Colorizer.class);
+public class ColorizerNeuralNetwork {
+    private static final Logger LOG = LoggerFactory.getLogger(ColorizerNeuralNetwork.class);
 
-    static final int HEIGHT = 32;
-    static final int WIDTH = 32;
     private static final int CHANNELS = 1;
     private static final int BATCH_SIZE = 32;
     private static final int SEED = 123;
-    private static final int EPOCHS = 5;
-    private static final String MODEL_PATH = "recolorize-interface/src/main/resources/model.zip";
-    private static final String IMAGES_DIRECTORY = "D:\\Daten\\Documents\\Colorization\\color";
-    private static final String ALLOWED_FORMATS = "jpg";
 
-    public static void main(final String[] args) throws IOException {
-        LOG.info("LOAD DATA");
-        File imagesDirectory = new File(IMAGES_DIRECTORY);
+    private final int width;
+    private final int height;
 
-        FileSplit images = new FileSplit(imagesDirectory, new String[]{ALLOWED_FORMATS});
+    private RecordReaderDataSetIterator iterator;
 
-        ColorizerRecordReader recordReader = new ColorizerRecordReader(HEIGHT, WIDTH);
+    public ColorizerNeuralNetwork(final int width, final int height) {
+        this.width = width;
+        this.height = height;
+    }
+
+    public void loadImages(String imgDir) throws IOException {
+        File imagesDirectory = new File(imgDir);
+
+        FileSplit images = new FileSplit(imagesDirectory, NativeImageLoader.ALLOWED_FORMATS);
+
+        ColorizerRecordReader recordReader = new ColorizerRecordReader(height, width);
         recordReader.initialize(images);
 
-        RecordReaderDataSetIterator iterator = new RecordReaderDataSetIterator(recordReader, BATCH_SIZE);
+        iterator = new RecordReaderDataSetIterator(recordReader, BATCH_SIZE);
+    }
 
-        LOG.info("CREATE MODEL");
+    public MultiLayerNetwork train(int epochs) {
         MultiLayerNetwork net = lenet();
         net.init();
 
-        LOG.info("TRAIN MODEL");
-        for (int i = 0; i < EPOCHS; i++) {
+        for (int i = 0; i < epochs; i++) {
             net.fit(iterator);
             LOG.info("FINISHED EPOCH " + i);
         }
-
-        LOG.info("SAVE MODEL");
-        ModelSerializer.writeModel(net, MODEL_PATH, false);
+        return net;
     }
 
-    private static MultiLayerNetwork lenet() {
+    public MultiLayerNetwork train() {
+        return train(1);
+    }
+
+    private MultiLayerNetwork lenet() {
         MultiLayerConfiguration conf = new NeuralNetConfiguration.Builder()
                 .seed(SEED)
                 .l2(0.005)
@@ -92,15 +95,15 @@ public class Colorizer {
                         .nOut(500)
                         .build())
                 .layer(5, new OutputLayer.Builder(LossFunctions.LossFunction.NEGATIVELOGLIKELIHOOD)
-                        .nOut(HEIGHT * WIDTH)
+                        .nOut(height * width)
                         .activation(Activation.SOFTMAX)
                         .build())
-                .setInputType(InputType.convolutional(HEIGHT, WIDTH, CHANNELS))
+                .setInputType(InputType.convolutional(height, width, CHANNELS))
                 .build();
         return new MultiLayerNetwork(conf);
     }
 
-    private static MultiLayerNetwork alexnet() {
+    private MultiLayerNetwork alexnet() {
         MultiLayerConfiguration conf = new NeuralNetConfiguration.Builder()
                 .seed(SEED)
                 .weightInit(new NormalDistribution(0.0, 0.01))
@@ -163,10 +166,10 @@ public class Colorizer {
                         .build())
                 .layer(new OutputLayer.Builder(LossFunctions.LossFunction.NEGATIVELOGLIKELIHOOD)
                         .name("output")
-                        .nOut(HEIGHT * WIDTH)
+                        .nOut(height * width)
                         .activation(Activation.SOFTMAX)
                         .build())
-                .setInputType(InputType.convolutional(HEIGHT, WIDTH, CHANNELS))
+                .setInputType(InputType.convolutional(height, width, CHANNELS))
                 .build();
         return new MultiLayerNetwork(conf);
     }

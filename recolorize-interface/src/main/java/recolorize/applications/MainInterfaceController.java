@@ -9,16 +9,19 @@ import org.nd4j.linalg.api.ndarray.INDArray;
 import org.nd4j.linalg.factory.Nd4j;
 import org.nd4j.linalg.indexing.NDArrayIndex;
 import recolorize.image.PixelImage;
+import recolorize.neuralnetwork.ColorizerNeuralNetwork;
 
 import java.io.File;
 import java.io.IOException;
-
-import static recolorize.applications.Colorizer.HEIGHT;
-import static recolorize.applications.Colorizer.WIDTH;
+import java.io.InputStream;
+import java.util.Arrays;
 
 public class MainInterfaceController {
 
-    private final MultiLayerNetwork model;
+    private MultiLayerNetwork model;
+
+    private final int width = 256;
+    private final int height = 256;
 
     @FXML
     public ImageView colorImageView;
@@ -26,7 +29,17 @@ public class MainInterfaceController {
     public ImageView greyImageView;
 
     public MainInterfaceController() throws IOException {
-        model = ModelSerializer.restoreMultiLayerNetwork(getClass().getResourceAsStream("/model.zip"));
+        InputStream netInputStream = getClass().getResourceAsStream("/model.zip");
+
+        if (netInputStream == null) {
+            ColorizerNeuralNetwork net = new ColorizerNeuralNetwork(width, height);
+            net.loadImages("D:\\Daten\\Documents\\Colorization\\color");
+            model = net.train(5);
+
+            ModelSerializer.writeModel(model, "recolorize-interface/src/main/resources/model.zip", true);
+        } else {
+            model = ModelSerializer.restoreMultiLayerNetwork(netInputStream);
+        }
     }
 
     @FXML
@@ -35,31 +48,21 @@ public class MainInterfaceController {
         fileChooser.setTitle("Load image");
         File imageFile = fileChooser.showOpenDialog(null);
 
-        if (imageFile != null) {
+        if (imageFile != null && model != null) {
             PixelImage greyImage = PixelImage.load(imageFile);
-            greyImageView.setImage(greyImage.asJavaFxImage());
+            PixelImage resizedGreyImage = greyImage.resize(width, height);
+            greyImageView.setImage(resizedGreyImage.resize(greyImage.getWidth(), greyImage.getHeight()).asJavaFxImage());
 
-            INDArray array = Nd4j.create(intArrayToDoubleArray(greyImage.getPixels()));
-            INDArray resized = resizeNDArray(array, new int[]{HEIGHT, WIDTH});
+            INDArray array = Nd4j.create(new int[]{1, width, height}, intArrayToDoubleArray(resizedGreyImage.getPixels()));
 
-            int[] colorImagePixels = model.output(resized).toIntVector();
+            int[] colorImagePixels = model.output(array).toIntVector();
 
-            PixelImage colorImage = PixelImage.fromPixelsArray(colorImagePixels, WIDTH, HEIGHT);
-            colorImageView.setImage(colorImage.asJavaFxImage());
+            PixelImage colorImage = PixelImage.fromPixelsArray(colorImagePixels, width, height);
+            colorImageView.setImage(colorImage.resize(greyImage.getWidth(), greyImage.getHeight()).asJavaFxImage());
         }
     }
 
     private double[] intArrayToDoubleArray(int[] arr) {
-        double[] doubleArray = new double[arr.length];
-        for (int i = 0; i < arr.length; i++) {
-            doubleArray[i] = arr[i];
-        }
-        return doubleArray;
-    }
-
-    private INDArray resizeNDArray(INDArray arr, int [] shape) {
-        INDArray resized = Nd4j.create(shape);
-        resized.get(NDArrayIndex.createCoveringShape(arr.shape())).assign(arr);
-        return resized;
+        return Arrays.stream(arr).asDoubleStream().toArray();
     }
 }
