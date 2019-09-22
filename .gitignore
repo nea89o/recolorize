@@ -5,3 +5,4 @@ gradle/
 *.iml
 gradlew
 gradlew.bat
+recolorize-interface/src/main/resources/model.zip

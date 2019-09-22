@@ -20,7 +20,7 @@ public class Starter extends Application {
         Parent root = FXMLLoader.load(MainInterfaceController.class.getResource("/main_interface.fxml"));
 
         Scene scene = new Scene(root, 800, 600);
-        stage.setTitle("Coloriztion");
+        stage.setTitle("Colorization");
         stage.setScene(scene);
         stage.getIcons().add(new Image(getClass().getResourceAsStream("/icon.png")));
         stage.setMaximized(true);

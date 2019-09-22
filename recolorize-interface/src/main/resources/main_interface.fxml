@@ -10,7 +10,7 @@
             prefHeight="800.0" prefWidth="600.0">
     <VBox>
         <Button text="Load" onAction="#load"/>
-        <ImageView fx:id="greyImageView"/>
+        <ImageView fx:id="greyImageView" style="-fx-max-height: 400px"/>
         <ImageView fx:id="colorImageView"/>
     </VBox>
 </AnchorPane>

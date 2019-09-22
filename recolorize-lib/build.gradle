@@ -12,6 +12,13 @@ repositories {
 }
 
 dependencies {
-    compile group: 'org.slf4j', name: 'slf4j-api', version: slf4jVersion
+    compile group: 'ch.qos.logback', name: 'logback-classic', version: logbackVersion
+
+    compile group: 'org.deeplearning4j', name: 'deeplearning4j-core', version: deepLearning4jVersion
+    compile group: 'org.deeplearning4j', name: 'deeplearning4j-nlp', version: deepLearning4jVersion
+    compile group: 'org.deeplearning4j', name: 'deeplearning4j-zoo', version: deepLearning4jVersion
+
+    compile group: 'org.nd4j', name: 'nd4j-native-platform', version: deepLearning4jVersion
+
     testCompile group: 'junit', name: 'junit', version: '4.12'
 }
