@@ -16,17 +16,11 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.Arrays;
 
+import static recolorize.applications.Constants.*;
+
 public class MainInterfaceController {
 
     private MultiLayerNetwork model;
-
-    private final int width = 256;
-    private final int height = 256;
-
-    private static final String USER_DIR = System.getProperty("user.home");
-    private static final String RECOLORIZE_DIR = USER_DIR + "/recolorize";
-    private static final String MODEL_NAME = "/model.zip";
-    private static final String IMAGES_DIR = RECOLORIZE_DIR + "/images";
 
     @FXML
     public ImageView colorImageView;
@@ -43,8 +37,7 @@ public class MainInterfaceController {
             InputStream netInputStream = new FileInputStream(new File(RECOLORIZE_DIR + MODEL_NAME));
             model = ModelSerializer.restoreMultiLayerNetwork(netInputStream);
         } else {
-            ColorizerNeuralNetwork net = new ColorizerNeuralNetwork(width, height);
-            net.loadImages(IMAGES_DIR);
+            ColorizerNeuralNetwork net = new ColorizerNeuralNetwork(IMAGE_WIDTH, IMAGE_HEIGHT, IMAGES_DIR);
             model = net.train(5);
 
             ModelSerializer.writeModel(model, RECOLORIZE_DIR + MODEL_NAME, true);
@@ -59,14 +52,15 @@ public class MainInterfaceController {
 
         if (imageFile != null && model != null) {
             PixelImage greyImage = PixelImage.load(imageFile);
-            PixelImage resizedGreyImage = greyImage.resize(width, height);
-            greyImageView.setImage(resizedGreyImage.resize(greyImage.getWidth(), greyImage.getHeight()).asJavaFxImage());
+            PixelImage resizedGreyImage = greyImage.resize(IMAGE_WIDTH, IMAGE_HEIGHT);
 
-            INDArray array = Nd4j.create(new int[]{1, width, height}, intArrayToDoubleArray(resizedGreyImage.getPixels()));
+            INDArray array = Nd4j.create(new int[]{1, IMAGE_WIDTH, IMAGE_HEIGHT}, intArrayToDoubleArray(resizedGreyImage.getPixels()));
 
             int[] colorImagePixels = model.output(array).toIntVector();
 
-            PixelImage colorImage = PixelImage.fromPixelsArray(colorImagePixels, width, height);
+            PixelImage colorImage = PixelImage.fromPixelsArray(colorImagePixels, IMAGE_WIDTH, IMAGE_HEIGHT);
+
+            greyImageView.setImage(resizedGreyImage.resize(greyImage.getWidth(), greyImage.getHeight()).asJavaFxImage());
             colorImageView.setImage(colorImage.resize(greyImage.getWidth(), greyImage.getHeight()).asJavaFxImage());
         }
     }
