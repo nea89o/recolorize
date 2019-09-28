@@ -1,10 +1,10 @@
 package recolorize.neuralnetwork;
 
 import org.datavec.api.split.FileSplit;
+import org.datavec.api.split.InputSplit;
 import org.datavec.api.writable.NDArrayWritable;
 import org.datavec.api.writable.Writable;
 import org.datavec.image.loader.NativeImageLoader;
-import org.deeplearning4j.api.storage.StatsStorage;
 import org.deeplearning4j.nn.api.OptimizationAlgorithm;
 import org.deeplearning4j.nn.conf.GradientNormalization;
 import org.deeplearning4j.nn.conf.MultiLayerConfiguration;
@@ -15,9 +15,6 @@ import org.deeplearning4j.nn.conf.layers.*;
 import org.deeplearning4j.nn.multilayer.MultiLayerNetwork;
 import org.deeplearning4j.nn.weights.WeightInit;
 import org.deeplearning4j.optimize.listeners.ScoreIterationListener;
-import org.deeplearning4j.ui.api.UIServer;
-import org.deeplearning4j.ui.stats.StatsListener;
-import org.deeplearning4j.ui.storage.InMemoryStatsStorage;
 import org.nd4j.linalg.activations.Activation;
 import org.nd4j.linalg.api.ndarray.INDArray;
 import org.nd4j.linalg.learning.config.AdaDelta;
@@ -33,9 +30,8 @@ import java.util.List;
 public class ColorizerNeuralNetwork {
     private static final Logger LOG = LoggerFactory.getLogger(ColorizerNeuralNetwork.class);
 
-    private static final int CHANNELS = 1;
+    private static final int GREYSCALE_CHANNELS = 1;
     private static final int COLOR_CHANNELS = 3;
-    private static final int BATCH_SIZE = 32;
     private static final int SEED = 123;
 
     private final int width;
@@ -47,23 +43,23 @@ public class ColorizerNeuralNetwork {
         this.width = width;
         this.height = height;
 
+        LOG.info("LOAD IMAGES");
         File imagesDirectory = new File(imgDir);
 
-        FileSplit images = new FileSplit(imagesDirectory, NativeImageLoader.ALLOWED_FORMATS);
+        InputSplit images = new FileSplit(imagesDirectory, NativeImageLoader.ALLOWED_FORMATS);
 
         recordReader = new ColorizerRecordReader(height, width);
         recordReader.initialize(images);
     }
 
     public MultiLayerNetwork train(final int epochs) {
-        UIServer uiServer = UIServer.getInstance();
-        StatsStorage statsStorage = new InMemoryStatsStorage();
-        uiServer.attach(statsStorage);
-
+        LOG.info("CREATE NETWORK");
         MultiLayerNetwork model = lenet();
-        model.setListeners(new ScoreIterationListener(10), new StatsListener(statsStorage));
+        model.setListeners(new ScoreIterationListener(10));
         model.init();
+        LOG.info(model.summary());
 
+        LOG.info("TRAIN");
         for (int i = 0; i < epochs; i++) {
             recordReader.reset();
             while (recordReader.hasNext()) {
@@ -80,37 +76,33 @@ public class ColorizerNeuralNetwork {
     private MultiLayerNetwork lenet() {
         MultiLayerConfiguration conf = new NeuralNetConfiguration.Builder()
                 .seed(SEED)
-                .l2(0.005)
+                .l2(0.001)
                 .activation(Activation.RELU)
-                .weightInit(WeightInit.XAVIER)
+                .weightInit(WeightInit.RELU)
                 .optimizationAlgo(OptimizationAlgorithm.STOCHASTIC_GRADIENT_DESCENT)
                 .updater(new Nesterovs(0.0001, 0.9))
                 .list()
                 .layer(0, new ConvolutionLayer.Builder(new int[]{5, 5}, new int[]{1, 1}, new int[]{0, 0})
-                        .name("cnn1")
-                        .nIn(CHANNELS)
+                        .nIn(GREYSCALE_CHANNELS)
                         .nOut(50)
-                        .biasInit(0.0)
+                        .biasInit(0)
                         .build())
                 .layer(1, new SubsamplingLayer.Builder(new int[]{2, 2}, new int[]{2, 2})
-                        .name("maxpool1")
                         .build())
                 .layer(2, new ConvolutionLayer.Builder(new int[]{5, 5}, new int[]{5, 5}, new int[]{1, 1})
-                        .name("cnn2")
                         .nOut(100)
                         .biasInit(0)
                         .build())
                 .layer(3, new SubsamplingLayer.Builder(new int[]{2, 2}, new int[]{2, 2})
-                        .name("maxpool2")
                         .build())
                 .layer(4, new DenseLayer.Builder()
                         .nOut(500)
                         .build())
-                .layer(5, new OutputLayer.Builder(LossFunctions.LossFunction.NEGATIVELOGLIKELIHOOD)
+                .layer(5, new OutputLayer.Builder(LossFunctions.LossFunction.MSE)
                         .nOut(height * width * COLOR_CHANNELS)
-                        .activation(Activation.SOFTMAX)
+                        .activation(Activation.IDENTITY)
                         .build())
-                .setInputType(InputType.convolutional(height, width, CHANNELS))
+                .setInputType(InputType.convolutional(height, width, GREYSCALE_CHANNELS))
                 .build();
         return new MultiLayerNetwork(conf);
     }
@@ -181,7 +173,7 @@ public class ColorizerNeuralNetwork {
                         .nOut(height * width * COLOR_CHANNELS)
                         .activation(Activation.SOFTMAX)
                         .build())
-                .setInputType(InputType.convolutional(height, width, CHANNELS))
+                .setInputType(InputType.convolutional(height, width, GREYSCALE_CHANNELS))
                 .build();
         return new MultiLayerNetwork(conf);
     }

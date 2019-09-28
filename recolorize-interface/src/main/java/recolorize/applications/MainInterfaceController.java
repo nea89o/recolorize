@@ -51,17 +51,19 @@ public class MainInterfaceController {
         File imageFile = fileChooser.showOpenDialog(null);
 
         if (imageFile != null && model != null) {
+            final int MAX_HEIGHT = 800;
+            final int MAX_WIDTH = 800;
+
             PixelImage greyImage = PixelImage.load(imageFile);
             PixelImage resizedGreyImage = greyImage.resize(IMAGE_WIDTH, IMAGE_HEIGHT);
 
             INDArray array = Nd4j.create(new int[]{1, IMAGE_WIDTH, IMAGE_HEIGHT}, intArrayToDoubleArray(resizedGreyImage.getPixels()));
 
             int[] colorImagePixels = model.output(array).toIntVector();
-
             PixelImage colorImage = PixelImage.fromPixelsArray(colorImagePixels, IMAGE_WIDTH, IMAGE_HEIGHT);
 
-            greyImageView.setImage(resizedGreyImage.resize(greyImage.getWidth(), greyImage.getHeight()).asJavaFxImage());
-            colorImageView.setImage(colorImage.resize(greyImage.getWidth(), greyImage.getHeight()).asJavaFxImage());
+            greyImageView.setImage(resizedGreyImage.resize(Math.min(greyImage.getWidth(), MAX_WIDTH), Math.min(greyImage.getHeight(), MAX_HEIGHT)).asJavaFxImage());
+            colorImageView.setImage(colorImage.resize(Math.min(greyImage.getWidth(), MAX_WIDTH), Math.min(greyImage.getHeight(), MAX_HEIGHT)).asJavaFxImage());
         }
     }
 

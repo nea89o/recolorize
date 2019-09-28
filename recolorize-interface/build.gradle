@@ -20,7 +20,6 @@ dependencies {
     compile group: 'org.deeplearning4j', name: 'deeplearning4j-core', version: deepLearning4jVersion
     compile group: 'org.deeplearning4j', name: 'deeplearning4j-nlp', version: deepLearning4jVersion
     compile group: 'org.deeplearning4j', name: 'deeplearning4j-zoo', version: deepLearning4jVersion
-    compile group: 'org.deeplearning4j', name: 'deeplearning4j-ui_2.10', version: deepLearning4jVersion
 
     compile group: 'org.nd4j', name: 'nd4j-native-platform', version: deepLearning4jVersion
 
